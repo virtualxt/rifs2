@@ -1,0 +1,21 @@
+packet buffer and handshaking...
+
+PACKET
+  BYTE  packetID[2] -- KY -- request from server
+                       LY -- reply from server
+                       RP -- resent last packet, either direction
+  WORD  length      -- number of bytes in this packet
+                       the entire packet (including header)
+  WORD  notlength   -- ~length (used to verify correctness)
+  DWORD crc32       -- 32 bit CRC, calculated over the entire packet,
+                       with this value set to 0 for the calculation
+  WORD  cmd         -- for the server, this is the result of the operation
+                       for the client, this is the code of the operation to
+                       be performed
+  BYTE  data[]      -- any additional data to be sent either direction
+-----------------------------------------------------------
+a basic assumtion in this is that only request can be processed in either
+direction at a time, but requests can go in either direction. if both
+directions are going simultaneously, a full packet must be transmitted
+in one direction first. 
+

@@ -1,0 +1,358 @@
+RIFS --- Remote Installable File System
+Version 2.0
+
+(this is the same code as version 1.0 but i've modified the documentation)
+
+Author: Kyle A. York
+Address:
+  internet:    noesis@ucscb.ucsc.edu
+  compuserver: 72125,1533
+  (please use the i-net account when possible, i rarely check my
+   mail at the cis account)
+   
+Acknowledgments
+===============
+  I think this should go first because none of this would be possible
+without these people:
+
+  Rob Warnock  <rpw3@sgi.com> 
+    I found code for the CRC-32 in the comp.compression FAQ, and it
+  is attributed to him.
+
+  David Jurgens
+    Who wrote HelpPC. Everyone should have a copy of this. I think I
+  still have the first copy without updates because it went $hareware.
+  
+  Ralph Brown
+    OK, anyone who writes anything for MSDOS should probably thank
+  Mr. Brown. The constantly updated interrupt list on SIMTEL is
+  more information than any number of books.
+
+  ..and..
+  Undocumented DOS
+    This was a VERY FRUSTRATING book!!! The second version is probably
+  better though. The IFS section (chapter 4) is incomplete. By using
+  both the book and source I managed to get enough information for
+  each function, but it was an absolute nightmare due to being incomplete.
+  The text did not fully describe the functions, so I had to constantly
+  refer to the source which was in cryptic pascal.
+    Still, the concepts are good and the book is worth reading.
+  
+Introduction
+============
+
+  This program provides a kind of ``mini-lan'' which links two computers
+through the serial port and allows users on one machine access to the
+resources on the other. This is currently limited to available disk
+drives (including CD-ROM and network drives).
+
+  I restricted this to serial ports because I need to access a machine
+remotely (modem to modem instead of direct connections).
+
+  Before writing this I poked around SIMTEL to see if anything similar
+was available. Alas, no. Some things looked quite interesting, but nothing
+was exactly what I needed and much of it cost $. I am including source code
+for people who are interested. It is interesting because it shows (1) a 
+decent, interrupt driven serial unit, and (2) an installable file system
+based on the DOS 3.x + IFS specification (MSCDEX type systems).
+
+  Finally, to those of you who say ``get dos 6.x, it has interlink!!.''
+Yes, this is good software. I was somewhat impressed. Unfortunately, for
+some reason, the server takes 130K+ AND must be in control of the machine.
+This might be acceptable for file transfers, but that is about it.
+  
+Restrictions
+============
+
+This is freeware, NOT public domain. I retain the license so please:
+
+  * Don't sell copies of this product without contacting me.
+  * Always leave my name, and if you use any code in your programs
+    I would appreciate a note somewhere in the documentation that
+    it was based upon my code.
+  * If you modify the code, SAY SO! I don't want to be blamed for your
+    mistakes :)
+
+  + This is not a real requirement but I would appreciate if you mail me
+    a note telling me you use this, or hate it :) This enables me to
+    mail updates.
+    
+System Requirements
+===================
+  * IBM PC compatible 
+  * MSDOS 3.2 though 6.2 EXCEPT 4.x (see below).
+  * serial port
+  * 30K free memory
+
+  The RCLIENT module can ONLY be used with MSDOS 3.2 through 6.2
+EXCEPT 4.x. It has been tested with MS Windows 3.1 and Desqview 2.4
+and can be run either inside a s window, or before Windows or Desqview
+is loaded, in which case the remote drives are available to all windows.
+
+  Caveat: If this is loaded before windows, only one window at a time
+    should access the remote drive or all hell breaks loose.
+
+  RCLIENT is NOT COMPATIBLE with Windows NT 3.0 and may not be COMPATIBLE
+with OS/2.
+
+  The RSERVER module can be run in either of two states. If it is to be
+run on a computer running only DOS, then it runs in an internal multi-
+tasking state. If it is to be run under MS-Windows or Desqview, the
+internal multi-tasking must be disabled, and it must be run in a dedicated
+window, which causes a slight decrease in performance, but not much.
+  
+  RSERVER running without multi-tasking should be COMPATIBLE with any
+multi tasking operating system that can run DOS programs. It has been
+tested with Window NT 3.0, Windows 3.1, and Desqview.
+
+  Caveat: RSERVER is totally incompatible with Windows 3.1. If someone
+    does get it to work, please let me know! It looks like it will only
+    work if rewritten to be a VxD.
+    
+Programs
+========
+  RSERVER  --- server TSR / program
+  RCLIENT  --- client TSR program
+  RDRIVE   --- client : drive mapping
+  RSTATUS  --- client/server : display status
+  
+
+Concept
+=======
+  +---------+         +---------+
+  |         |         |         |
+  | RCLIENT |  ---->  | RSERVER |
+  |         |         |         |
+  +---------+         +---------+
+
+
+ RSERVER makes its resources available to RCLIENT in a way that is
+as transparent as possible. This is accomplished by loading a small TSR
+which allows the two machines to talk via the serial ports.
+
+Once the two machines are connected, RCLIENT can access the RSERVERs disk
+drives (floppy, hard, even CDROM).
+  
+Setup
+=====
+  1. Add the line:
+       lastdrive = Z
+     to your config.sys. 
+  2. Load the program SHARE.EXE. (server only)
+  2. Connect the two machines with a NULL modem
+  3. Run the program "RSERVER" on one machine, and "RCLIENT" on the other.
+
+Quick Example:
+  If the machine running RSERVER will only be used to run DOS programs,
+  type:
+    RSERVER
+  On the other machine, execute:
+    RCLIENT
+    RDRIVE /local=z /remote=c
+  Now if you do a "dir z:", you should see the root directory on the server
+  drive C.
+
+Commands
+========
+  RCLIENT {/speed=#} {/com#} {/port=n} {/irq=i} {/intno=x} {/remove}
+  RSERVER {/speed=#} {/com#} {/port=n} {/irq=i} {/intno=x} 
+          {/nobackground} {/remove}
+  
+    Load the CLIENT or SERVER module.
+
+    speed : 
+      Set communication speed. This defaults to 19,200 bps. It must be
+      set the same for both machines to communicate. It can be any
+      number which divides 115200, including 115200.
+      Typical values are:
+	  115200, 57400, 38400, 28800, 19200, 14400, 9600, 4800, 2400, 
+	  1200, 600, 300.
+      Depending on machine speed for the SLOWEST of the two machines,
+      115200 seems be good for a 10MHz 80286, and 23040 seems good
+      for an 8086.
+        If an invalid number is entered, the next lower divisor is taken,
+      and the actual communication speed being used is reported.
+	For example, if you enter 40000, 38400 is used.
+      
+    com# : # is 1,2,3 or 4
+	Use serial port [#] for transfer.  The port address will be read
+      from the BIOS data area, and the irq will default to the following:
+      
+			    standard    
+		   #   BDA   values  irq
+		  -----------------------
+		   1  40:00   03f8    0c
+		   2  40:02   02f8    0b
+		   3  40:04   03e8    0c
+		   4  40:06   02e8    0b
+        
+    port = n
+        Use this to override the default port base address. This should not
+      be necessary unless your serial port is configurable, and you have
+      strayed from the defaults.
+      n is a HEXADECIMAL number defining the new base address.
+      
+    irq = i
+        Use this to override the default IRQ number.  This should not be
+      necessary unless your serial port is configurable and you have strayed
+      from the defaults.
+      n is a HEXADECIMAL number.
+
+    nobackground
+        This is used only by RSERVER, and determines the running state
+      for the server. If the server is running in a window of a a multi-
+      tasking program such as MS-WINDOWS or DesqView, this option MUST BE 
+      selected, otherwise it should not be used.
+      
+    remove
+      Remove the TSR from memory.
+      
+          ------------------------------------------------------------
+
+  RDRIVE {/local=a} {/remote=b} {/remove}
+  
+    Run only from the CLIENT machine.
+    Connect CLIENT drive A to SERVER drive B
+    
+    Note:
+      If the CLIENT connects to a SERVER floppy drive, the SERVER
+    will slow noticeably whenever the floppy drive is active. This
+    is due to the two second floppy startup time and cannot easily
+    be avoided.
+
+      If RDRIVE appears with no arguments, it will show all currently
+    active connections.
+
+      If RDRIVE /remove is executed, all connections are removed.
+    
+    Example:
+      RDRIVE /local=E /remote=C
+    Connects CLIENT drive E: to SERVER drive C:  
+
+    /remove = break the connection.
+
+    Example:
+      RDRIVE E: /remove
+
+    Returns CLIENT drive E: to its original state.
+
+    This command does not check the availability of the resource.
+    
+          ------------------------------------------------------------
+    
+  RPORT lpt# {= filename} {/timeout = #} {/remove}
+
+      The command redirects the output from a CLIENT parallel port to a 
+    file or device on the server.
+
+    lpt#
+      The CLIENT printer port to redirect.
+      
+    = filename
+      Redirect the output to a file. Filename is any valid file name, so
+    it can exist on either the CLIENT machine or SERVER machine.
+
+    /timeout #
+      Set the number of seconds of inactivity before transmitting the 
+    buffer (default = 15). If # seconds have elapsed without anything being 
+    sent to the printer, the current buffer will be transmitted even if 
+    it is not full.
+
+    /remove
+      Remove the connection to this resource.
+
+          ------------------------------------------------------------
+      
+  RSTATUS
+    Display the status of either the client or server.
+
+          ------------------------------------------------------------
+  
+Technical Notes
+===============
+
+The programs are all written in a `C` / assembly hybrid. I tried to minimize
+the assembly code only the most time critical tasks, and some things that
+simply would be a nightmare to do in C, especially the interrupt handlers.
+
+I was amazed to find there is no memswap(...) command in standard C.
+
+The CRC calculation was coded in assembly due to the 5-fold speed
+increase which makes a BIG difference on the slower machines.
+
+The code compiles under Turbo C 2.0 and uses some Turbo C specific 
+structures, especially when the server processes packets. Originally
+I intended to simply use standard C functions to provide all services,
+but this would have entailed translating {errno} to DOS errors and was
+more trouble than it was worth, so I ended up setting registers in a
+struct and calling Int 21 directly. This would be MUCH more efficient in
+assembly, but I haven't had the time to bother.
+
+Unlike most similar software that I have seen, RCLIENT 
+installs itself as an ``installable file system'' in much the same way 
+that MSCDEX (used for CDROM drives) does. The advantage is that this
+module only has to provide a handful of services, allowing DOS to do
+most of the work. Any disk that is compatible with DOS, is COMPATIBLE
+with RIFS.
+
+The RSERVER module uses only standard, documented DOS calls for all
+functions. Since it runs in the background, it does have to use some
+undocumented functions to make DOS re-entrant. On VERY rare occasions,
+a RCLIENT request may come at a time when RSERVER cannot immediately
+act upon it (for example, the RSERVER machine could be in the middle of a 
+disk i/o function, or DOS could be in a critical area). When this happens,
+the request is held until it can be safely processed. This time lag is
+usually only a few micro seconds, so it should not be noticed.
+
+RSERVER uses a serial interrupt driver. RCLIENT polls for both send and
+receive. This seems to be a good tradeoff performance-wise. Probably not
+the ideal situation in multi tasking environments.
+
+All data packets are verified using a 32 bit CRC and packet length 
+verification so the chance of data corruption should be close to zero.
+The CRC algorithm comes from the comp.compression FAQ, and Rob Warnock 
+<rpw3@sgi.com> is listed as the original author. I coded this routine in 
+assembly using a static table. It runs at about 25K/sec on a 4MHz 8086 so 
+it's effect on throughput is minimal.
+
+          -----------------------------------------------------------
+          
+The Future          
+==========
+
+  Here are some things I plan to do. If you have any suggestions, I am
+willing to listen...
+
+  * Allow a remote (modem) login with password checking and optional
+    callback. This is my highest priority.
+
+  * Allow the CLIENT to run programs on the SERVER by transmitting screens
+    and keystrokes. I have already done this in another program and know
+    it is not difficult, as long as I do not send graphics (a 640 x 480
+    x 256 screen requires between 53 and 213 seconds over a 14.4Kbps
+    modem with compression).
+
+  * Combine the CLIENT and SERVER programs, or at least find a way to 
+    link them, to allow mutually shared resources which would be much
+    more valuable.
+    
+  * It might be kind of fun to add a NetBIOS layer. Either someone
+    else would have to do this, or someone would have to provide me
+    with GOOD DOCUMENTATION.
+
+  * Allow sharing printer ports. This might become a high priority as
+    my wife would much like to share my printer while she's working :)
+    
+          -----------------------------------------------------------
+
+Testing
+=======
+
+  I have tested these programs fairly extensively to ensure error
+free data transmissions. I have used the following configurations as
+both client and server:
+
+  * 80486-25 MSDOS 5.0 and 6.0
+  * 80286-12 MSDOS 3.3, 5.0
+  *  8086-4  MSDOS 3.3, 5.0
+

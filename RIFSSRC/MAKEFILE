@@ -1,0 +1,37 @@
+#
+# turbo C (tcc) switches:
+#    -c  : compile only
+#    -r  : use register variables
+#    -Z  : optimize register variables
+#    -N- : no stack checking
+#    -v  : source level debugging
+#    -y  : include line numbers in debugging
+#
+# tasm
+#    /ml : case sensitive
+#    /m9 : allow multi pass assembing for forward references
+#    /zi : source level debugging
+#
+DEBUG = -v -y
+ASMDBG = /zi
+
+.c.obj:
+	tcc -c -r -Z -N- $(DEBUG) $*.c
+	
+.asm.obj:
+	tasm /ml /m9 $(ASMDBG) $*.asm	
+
+all : rclient.exe rdrive.exe rserver.exe rstatus.exe
+
+rclient.exe : rclient.obj comio.obj ifs0.obj com0.obj crc32.obj rifs.obj myalloc.obj
+	tcc $(DEBUG) rclient.obj comio.obj ifs0.obj com0.obj crc32.obj rifs.obj myalloc.obj
+	
+rdrive.exe : rdrive.obj rifs.obj
+	tcc $(DEBUG) rdrive.obj rifs.obj
+
+rserver.exe : rserver.obj svr0.obj comio.obj com0.obj crc32.obj rifs.obj myalloc.obj
+	tcc $(DEBUG) rserver.obj svr0.obj comio.obj com0.obj crc32.obj rifs.obj myalloc.obj
+	 
+rstatus.exe : rstatus.obj rifs.obj
+	tcc $(DEBUG) rstatus.obj rifs.obj
+		 

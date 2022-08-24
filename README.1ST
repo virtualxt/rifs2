@@ -1,0 +1,36 @@
+*-*- BACKUP -*-*-*- BACKUP -*-*-*- BACKUP -*-*-*- BACKUP -*-*-*- BACKUP -*-
+
+i've done the best i could at testing this and i don't think any errors
+exist that could destroy data, but better safe than sorry.
+
+i do some low level stuff so
+  1. use at your own risk
+  2. BACKUP!! BACKUP!! BACKUP!!
+  
+--kyle
+  
+
+QuickStart:
+
+  1. connect computers via NULL modem
+  2. put the line ``lastdrive = z'' in the config.sys on the computer
+     which will be the client
+  3. execute : ``RSERVER'' on the server machine
+     if you're not using com1, execute: ``RESERVER /com#''
+     where # is 1..4
+  4. execute : ``RCLIENT'' on the client machine
+     if you're not using com1, execute: ``RECLIENT /com#''
+     where # is 1..4
+  5. execute : ``RDRIVE /local=z /remote=c'' on the client machine
+     to link the client's drive Z to the server's drive C.
+
+  that's it. next, read the instructions :)
+
+  please tell me about any bugs you find, or enhancements you would like
+  to see in the first release. the source code will be held until the
+  first release so it can be cleaned up a bit.
+
+  maximum speed on a   4MHz  8086 is about:  23040bps
+                      12MHz 80286 or higher: 115200bps
+                      
+  
