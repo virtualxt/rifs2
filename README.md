@@ -2,8 +2,6 @@
 
 Remote Installable File System (RIFS) for DOS by Kyle A. York
 
-This version of the software has been slightly modified to work with the VirtualXT emulator.
-
 ## Restrictions
 
 This is freeware, NOT public domain. I retain the license so please:
